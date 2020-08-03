@@ -10,8 +10,10 @@ In the folder *[./data_temp/stations_hr]* you can find timeseries of the tempera
 
 Below you find the figure of temperatures time series since 1893 and smoothed time series showing the trend (using simple moving average).
  
-
-![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperatures.png?raw=true "Temperature trends (with SMA) [t°C]"))  | ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperature_trends.png?raw=true "Temperature [t°C]")
+ 
+ ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperatures.png?raw=true "Temperature trends (with SMA) [t°C]")           | ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperature_trends.png?raw=true "Temperature [t°C]")
+:-------------------------:|:-------------------------:
+(1)                        |  ![] (2)
 
 ...Before 1945 ony one station in the sample was reporting the measurments. This explains the difference in the red and beige lines: they show maximum *of all reporting stations* or *average of all reporting stations* in Germany for each hour.
 
