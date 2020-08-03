@@ -20,4 +20,4 @@ Before 1945 ony one station in the sample was reporting the measuremtns.
 This script connects to ENTSO-e API and downloads the data about outages.
 
 **My credits to github project for useful hints [GitHub: krose/entsoeR ](https://github.com/krose/entsoeR/blob/master/R/outages_get.R.com)**
-I referred his package as it gives a great look inside the API request and helped me to wtire the part for just downloading the data I needed for this project. I found it cumbersome to use the *entsoeR*, probably due to being newby solving the versions and platform conflicts.
+I refer to this package as it gives a great look inside the API request and helped me to wtire the part for just downloading the data I needed for this project. I found it cumbersome to use the *entsoeR*, probably due to being newby solving the versions and platform conflicts.
