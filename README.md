@@ -16,7 +16,7 @@ Below you find the figure of temperatures time series since 1893 and smoothed ti
 
 ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperature_trends.png?raw=true "Temperature [t°C]")
 
-...Highest temperatures from all reporting weather stations is growing steadily since 1950s. 
+...Maximum and average of all mesurments from the reporting weather stations is growing steadily since 1950s. 
 
 ### What you can find in *script_api_entsoe_request.r*
 This script connects to ENTSO-e API and downloads the data about outages.
