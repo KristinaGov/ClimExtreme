@@ -25,7 +25,7 @@ Maximum and average of all mesurments from the reporting weather stations is gro
 
 ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/raw_outage_plot.png?raw=true "Temperature trends (with SMA) [t°C]")           | ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/mounthly_max_hr_outage.png?raw=true "Temperature [t°C]")
 :-------------------------:|:-------------------------:
-(1)   
+(1)                        | (2)
 
 
 ### What you can find in *script_api_entsoe_request.r*
