@@ -15,11 +15,18 @@ Below you find the figure of temperatures time series since 1893 and smoothed ti
 :-------------------------:|:-------------------------:
 (1)                        | (2)
 
-...Before 1945 ony one station in the sample was reporting the measurments. This explains the difference in the red and beige lines: they show maximum *of all reporting stations* or *average of all reporting stations* in Germany for each hour.
+Before 1945 ony one station in the sample was reporting the measurments. This explains the difference in the red and beige lines: they show maximum *of all reporting stations* or *average of all reporting stations* in Germany for each hour.
 
 
 
-...Maximum and average of all mesurments from the reporting weather stations is growing steadily since 1950s. 
+Maximum and average of all mesurments from the reporting weather stations is growing steadily since 1950s. 
+
+### What you can find in *script_out_mw_price.r*
+
+![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/raw_outage_plot.png?raw=true "Temperature trends (with SMA) [t°C]")           | ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/mounthly_max_hr_outage.png?raw=true "Temperature [t°C]")
+:-------------------------:|:-------------------------:
+(1)   
+
 
 ### What you can find in *script_api_entsoe_request.r*
 This script connects to ENTSO-e API and downloads the data about outages.
