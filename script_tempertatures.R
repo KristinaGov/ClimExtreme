@@ -5,7 +5,7 @@
 # on the basis of the earliest records available and geographical locations.
 # Here you find the figure of temperatures time series since 1893 and smoothed time series showing the trend (simple moving average)
 
-# Make sure the workspace is in pristine condition
+# Make sure the work space is in pristine condition:
 rm(list=ls(all=TRUE))
 
 #########                call libraries                 ###########
@@ -44,12 +44,12 @@ files.hr.ls<-as.list(list.files(path = "./data_temp/stations_hr/tempfiles/",
                              pattern = "produkt_tu_stunde"
 ) )
 #length(files.hr.ls) # Check the length of the list of names - 20
-# check that all files exist
-exist.list2<-list()
+# Check that all files exist:
+exist.list<-list()
 for (i in 1:length(files.hr.ls)) {
-  exist.list2[[i]]<-file.exists(files.hr.ls[[i]])
+  exist.list[[i]]<-file.exists(files.hr.ls[[i]])
 }
-exist.list2
+all(exist.list)
 # read data about weather stations (names, ID, location lat / lon)
 stations.det.df<-as.data.frame(readxl::read_excel("./data_temp/list_stations.xlsx", 
                                                   sheet = "stat", col_names = T))
@@ -166,7 +166,7 @@ stations.hr.df[mapply(is.nan, stations.hr.df)] <- NA
 ##################################################################
 begin.1<- (min(stations.hr.df$datetime))  # "1893-01-01 01:00:00 UTC"
 end.1  <- (max(stations.hr.df$datetime))  # "2018-12-31 23:00:00 UTC"
-NO.1<-as.numeric(lubridate::ymd_hms(end.1)-lubridate::ymd_hms(begin.1))*24 #Number of hours: 1104478
+NO.1   <- as.numeric(lubridate::ymd_hms(end.1)-lubridate::ymd_hms(begin.1))*24 #Number of hours: 1104478
 # Check the end date - it has to be the same as in the data (see end.1):
 max(lubridate::ymd_hms(begin.1) + lubridate::hours(0:NO.1)) 
 # Set the time frequencies of measurements in the sample per year and day. 
@@ -216,6 +216,19 @@ ggplot()+
                    date_minor_breaks = "years",
                    limits = (c(begin.1,end.1))) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90) )
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size=24),
+        axis.text.y = element_text(angle = 90, hjust = 1, size=24),
+        plot.title = element_text(size = 18),
+        plot.subtitle = element_text(size = 18),
+        axis.title.x = element_text(size=24),
+        axis.title.y = element_text(size=24),
+        legend.justification="center", 
+        legend.position=c(0.95,0.89),
+        legend.title=element_text(size=24), 
+        legend.text=element_text(size=24),
+        legend.key.size = unit(1,"line"),
+        legend.title.align=0.5)
+ggsave("./Rplots/temperature_trends.png", dpi = 600, width = 540, height = 310, units = "mm")
+#ggsave("./Rplots/temperatures.png", dpi = 600, width = 540, height = 310, units = "mm")
 ##################################################################
 # Files are saved in ./Rplot/temperatures.png and ./Rplot/temperatures_trends.png
