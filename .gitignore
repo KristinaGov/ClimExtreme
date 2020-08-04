@@ -8,3 +8,4 @@
 *.txt
 
 .Rproj.user
+data_outage/outages_hr_value.csv
