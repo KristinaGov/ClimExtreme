@@ -19,7 +19,7 @@ Below you find the figure of temperatures time series since 1893 and smoothed ti
 :-------------------------:|:-------------------------:
 (1)                        | (2)
 
-Before 1945, only one station in the sample was reporting the measurements (see Figure 1). This explains the difference in the red and beige lines: they show maximum *of all reporting stations* or *average of all reporting stations* in Germany for each hour.
+Before 1945, only one station in the sample was reporting the measurements (see Figure 1). This explains the difference in the red and beige lines: they show maximum *of all reporting stations* or *average of all reporting stations* (in the sample of 20 selected stations) in Germany for each hour.
 
 Maximum and average of all measurements from the reporting weather stations are growing steadily since the 1950s (see Figure 2). 
 
