@@ -36,4 +36,4 @@ On Figure 3, you see the plot of time series describing the capacity mix unavail
 This script connects to ENTSO-e API and downloads the data about outages.
 
 **My credits to github project for useful hints [GitHub: krose/entsoeR ](https://github.com/krose/entsoeR/blob/master/R/outages_get.R.com)**
-I refer to this package as it gives a great look inside the API request and helped me to wtire the part for just downloading the data I needed for this project. I found it cumbersome to use the *entsoeR*, probably due to being newby solving the versions and platform conflicts.
+I refer to this package as it gives a great look inside the API request and helped me to write the part for just downloading the data I needed for this project. I found it cumbersome to use the *entsoeR*, probably due to being newby solving the versions and platform conflicts.
