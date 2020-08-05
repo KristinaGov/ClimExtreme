@@ -186,7 +186,7 @@ ggplot2::ggplot(f1,
                     y=quantity_out, x=date.time))+
   scale_fill_brewer(palette="Set3", labels=capnames[,"names"])+
   geom_bar(position="stack", stat="identity") +
-  scale_x_datetime(labels = scales::date_format("%Y-%B", tz="CET"), date_breaks = "months",
+  scale_x_datetime(labels = scales::date_format("%Y-%m", tz="CET"), date_breaks = "months",
                    limits = lims,
                    timezone = "GMT",
                    expand = c(0,0),
@@ -230,7 +230,7 @@ ggplot2::ggplot(dplyr::filter(mon.hourly.ts.out, fuel %in% capnames[,"cap"]),
                     y=sum.h, x=date))+
   geom_bar(position="stack", stat="identity") +
   scale_fill_brewer(palette="Set3", labels=capnames[,"names"])+
-  scale_x_date(labels = scales::date_format("%Y-%B"), date_breaks = "months",
+  scale_x_date(labels = scales::date_format("%Y-%m"), date_breaks = "months",
                expand = c(0,0), 
                limits = as.Date(lims),
                name="Date")+ 
