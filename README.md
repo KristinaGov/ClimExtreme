@@ -2,7 +2,8 @@
 
 # Working files and input data and source code for the paper to be published.
 ## How does climate change affect the transition of power systems: the case of Germany
-*Alexander Golub, Kristina Govorukha, Philip Mayer, Dirk Rübbelkeb*
+*Alexander Golub, Kristina Govorukha, Philip Mayer, Dirk Rübbelke*
+
 *Corresponding author: e-mail: kristina.govorukha@vwl.tu-freiberg.de*
 
 ### What you can find in *script_temperatures.r*
