@@ -1,6 +1,6 @@
 # ClimExtreme
 
-# Working files and input data and source code for the paper to be published.
+# Working files, input data and source code for the paper to be published.
 ## How does climate change affect the transition of power systems: the case of Germany
 ###### *Alexander Golub, Kristina Govorukha, Philip Mayer, Dirk Rübbelke*
 
