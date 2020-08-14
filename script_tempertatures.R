@@ -50,11 +50,11 @@ for (i in 1:length(files.hr.ls)) {
   exist.list[[i]]<-file.exists(files.hr.ls[[i]])
 }
 all(exist.list)
-# read data about weather stations (names, ID, location lat / lon)
+# Read data about weather stations (names, ID, location lat / lon)
 stations.det.df<-as.data.frame(readxl::read_excel("./data_temp/list_stations.xlsx", 
                                                   sheet = "stat", col_names = T))
 # Available column names in each file of the temperature data: SSTATIONS_ID;MESS_DATUM;QN_9;TT_TU;RF_TU;eor
-# TT_TU - air temperature at 2 meter high. STATIONS_ID - unuqie station ID. MESS_DATUM - datetime object.
+# TT_TU - air temperature at 2 meter high. STATIONS_ID - unique station ID. MESS_DATUM - datetime object.
 # Take only necessary data columns:
 take<-c("STATIONS_ID","MESS_DATUM","TT_TU")
 # Read the data on temperatures to the list of lists:
@@ -79,7 +79,7 @@ datatime<-length(unique(stations.hr.data.df$MESS_DATUM)) # Check: 1104467 unique
 seqntime<-length(seq(min(stations.hr.data.df$date), max(stations.hr.data.df$date), by="hours" ) ) # Check: 1104479 hours!
 # There are 12 hours missing! 
 datatime-seqntime
-# Take time sequence to the new dataframe:
+# Take time sequence to the new data frame:
 stations.hr.df<-data.frame(datetime=seq(min(stations.hr.data.df$date), max(stations.hr.data.df$date), by="hours"))
 # Create temporary data frame to make time series from the original data and merge it with the full sequence of dates:
 temporary.df<-data.frame(date=unique(stations.hr.data.df$MESS_DATUM))
@@ -91,13 +91,13 @@ stations.hr.df<-left_join(stations.hr.df,temporary.df, by=c("datetime"="datetime
 stations.hr.df[which(is.na(stations.hr.df$date)),]
 # Take unique stations' id, and check how many stations are in the sample:
 length(unique(stations.hr.data.df$STATIONS_ID)) # Check: 20
-# Create a dataframe to collect data specifically on the meteo-stations in the sample:
+# Create a data frame to collect data specifically on the meteo-stations in the sample:
 stations.hr.id<-as.data.frame(unique(stations.hr.data.df$STATIONS_ID))
 colnames(stations.hr.id)<-"id"
 # Collect the data about the selected 20 stations from the dataframe with all stations' details
 about.hr.stations.df<-dplyr::left_join(stations.hr.id, stations.det.df, by=c("id"="id") )
-# Collect the measurements and data about stations to one dataframe
-# And reshape long dataframe to columns by station id.
+# Collect the measurements and data about stations to one data frame
+# And reshape long data frame to columns by station id.
 for (i in 1:dim(stations.hr.id)[1]) {
   tomerge.df<-dplyr::select(dplyr::filter(stations.hr.data.df, STATIONS_ID==about.hr.stations.df[i,1]),
                             c("MESS_DATUM", "TT_TU"))
