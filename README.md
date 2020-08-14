@@ -32,6 +32,13 @@ Maximum and average of all measurements from the reporting weather stations are 
 On Figure 3, you see the plot of time series describing the capacity mix unavailable at every hour. Figure 4 illustrates the maximum capacity mix unavailable for a specific hour among all hours of the respective month. Highest values amount to 8 GW, as can be seen for summers 2018 and 2016. 
 
 
+### What you can find in *script_units.r*:
+
+![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/powerplants_locations.png?raw=true "Location of selected power plants")           | ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/stations_locations.png?raw=true "Location of selected weather stations")
+:-------------------------:|:-------------------------:
+(5)                        | (6)
+
+
 ### What you can find in *script_api_entsoe_request.r*:
 This script connects to ENTSO-e API and downloads the data about outages.
 
