@@ -1,5 +1,8 @@
 # This script connects to ENTSO-e API and downloads the data about outages.
 
+# About the ENTSO-e definitions of unavailability of generation units:
+# https://transparency.entsoe.eu/content/static_content/Static%20content/knowledge%20base/data-views/outage-domain/Data-view%20Unavailability%20of%20Production%20and%20Generation%20Units.html
+
 # My credits to github project for useful hints:
 # https://github.com/krose/entsoeR/blob/master/R/outages_get.R
 
