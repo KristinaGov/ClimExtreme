@@ -109,25 +109,35 @@ sum(is.na(loc.stat.df$lat)) # Check: has to be 0
 summary(loc.stat.df)
 
 # Add color index to the regions where weather stations are located (so we mark them on the map):
-loc.stat.df$color<-"lightblue"
+loc.stat.df$bubble<-1
 # Create a label name to show on the map:
 loc.stat.df$full_name<-paste(loc.stat.df$city, ", St. No: ", loc.stat.df$id, sep="")
 plz.df$plz<-as.numeric(plz.df$plz)
 # Add this data to the data frame sourced from shp@data:
-all.plz.stat.df<-left_join(plz.df, loc.stat.df[,c("plz","full_name","color")], by=c("plz"="plz"))
+all.plz.stat.df<-left_join(plz.df, loc.stat.df[,c("plz","full_name","color", "bubble")], by=c("plz"="plz"))
 sum(!is.na(all.plz.stat.df$full_name)) # Check - have to be the same number as stations in the set 20
 
 # Write data about weather to the shp file @data:
 plz.de@data<-all.plz.stat.df
 
+
 # Finally plot:
 graphname<-paste("./Rplots/stations_locations.png", sep="")
 graph<- tm_shape(plz.de) + 
-          tm_fill(col="grey", border.col ="white") +
-          tm_shape(plz.de) + tm_fill(col="color") +
-          tm_text("full_name", size = 0.5) +
-        tm_layout(inner.margins=c(0.02,0.02,0.02,0.02))
-tmap_save(graph, filename = graphname, outer.margins =c(0.02,0.02,0.02,0.02) )
+  tm_fill(col="grey", border.col ="white") +
+  tm_shape(plz.de) +
+  tm_symbols(shape="bubble", size=0.3, 
+             col = "full_name",
+             shapeNA = NA, showNA = NULL, colorNA = NULL, textNA = NULL,
+             title.col=paste("Weather stations", sep = " " ),
+             legend.shape.show = F,) +
+  tm_layout(inner.margins=c(0.02,0.02,0.02,0.02),
+            outer.margins=c(0.02,0.02,0.02,0.05),
+            legend.outside=T,
+            legend.outside.position =c("right"),
+            legend.just="center",legend.frame=F,
+            legend.width=-0.6,legend.text.size=0.6) 
+tmap_save(graph, filename = graphname)
 dev.off()
 ###################################################################
 
@@ -184,7 +194,7 @@ graph<- tm_shape(plz.de)+
              size.lim = c(0, 6000), 
              title.size=paste("Installed Capacities of",pplant[3,1], sep = " " )) +
   tm_layout(inner.margins=c(0.02,0.02,0.02,0.02),
-            outer.margins = c(0.02,0.02,0.02,0.04),
+            outer.margins=c(0.02,0.02,0.02,0.04),
             legend.outside=T,
             legend.outside.position =c("right"),
             legend.just="center",legend.frame=F,
