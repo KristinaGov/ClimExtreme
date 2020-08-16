@@ -131,8 +131,8 @@ graph<- tm_shape(plz.de) +
              shapeNA = NA, showNA = NULL, colorNA = NULL, textNA = NULL,
              title.col=paste("Weather stations", sep = " " ),
              legend.shape.show = F,) +
-  tm_layout(inner.margins=c(0.02,0.02,0.02,0.02),
-            outer.margins=c(0.02,0.02,0.02,0.05),
+  tm_layout(inner.margins=c(0.02,0.02,0.02,0.02),  # bottom, left, top, and right 
+            outer.margins=c(0.02,0.02,0.02,0.02),
             legend.outside=T,
             legend.outside.position =c("right"),
             legend.just="center",legend.frame=F,
