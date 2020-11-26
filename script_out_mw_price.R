@@ -9,21 +9,18 @@
 rm(list=ls(all=TRUE))
 
 #########                call libraries                 ###########
-library(readxl)
-library(dplyr) # be aware: these two packages have functions that can be overrwitten by consequent calls
-library(plyr)
-library(tidyr)
-library(raster)
-library(CommEcol)
-library(fBasics)
-library(ggplot2)
-library(ggpubr)
-library(ggnewscale) # add new scale to ggplot
-library(RColorBrewer)
-library(lubridate)
-library(ggExtra)
-library(ggpmisc)
-library(cowplot)
+packs <- c("dplyr", "plyr","raster","ncdf4","ggplot2", "ggnewscale",
+           "RColorBrewer","ggpubr","readxl", "pastecs", "ggExtra",
+           "CommEcol", "fBasics", "EnvStats", "geosphere", "ggpmisc",
+           "lubridate","tidyquant", "gridExtra", "tidyverse", "viridis",
+           "ts", "fxregime", "zoo", "fitdistrplus", "cowplot")
+for (i in 1:length(packs)) {
+  pack <- packs[i]
+  if(!is.element(pack, installed.packages()[,1]))
+  {install.packages(pack)
+  }else {print(paste(packs[i]," already installed"))}
+  require(pack,character.only=TRUE)
+}
 ###################################################################
 
 #########             set working directory             ###########
