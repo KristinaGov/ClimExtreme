@@ -153,7 +153,7 @@ hourly.ts.out$date.time<-ymd_hms(hourly.ts.out$date.time)
 ##################################################################
 
 ##################################################################
-write.csv(hourly.ts.out, file="./data_outage/outages_hr_value.csv")
+#write.csv(hourly.ts.out, file="./data_outage/outages_hr_value.csv")
 ##################################################################
 
 ##################################################################

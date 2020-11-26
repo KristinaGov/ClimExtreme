@@ -1,4 +1,11 @@
-# Script...
+# Script reads the .ncdf files.
+# Takes mean smi values in the radius around each eic of the power
+# plant that reported the outage (209).
+# Checks SMI time series for structural break (259).
+# Plots SMI time series for locations and long-term smi trend using SMA (288)
+# Analyze smi series (344)
+# Build distribution and frequency of smi for 1951-1995   and   1995-2018 (414)
+# Plots smi comparison 1951-2014 2015-2018  and Plots power plants outages (788)
 
 # Make sure the work space is in pristine condition:
 rm(list=ls(all=TRUE))
@@ -204,7 +211,7 @@ sum(is.na(plz.loc.df$near.lat))  # check: should be 0
 ##################################################################
 
 ##################################################################
-#      take mean smi values in the radius around each eic        #
+#      Take mean smi values in the radius around each eic        #
 ##########          radius coord and mean smi          ###########
 ##################################################################
 # function to extract available smi for lat/lon coordinates lying in a defined radius
@@ -337,7 +344,7 @@ ggplot(aggregate.smi.range.dlong, aes(x=date, y=mval, color=mtype, fill=regyear)
   scale_fill_brewer(palette = "Dark2")
 ##################################################################
 
-#########              analyse series                  ###########
+#########              Analyse smi series              ###########
 # Log-Normal Distribution: https://stat.ethz.ch/~stahel/lognormal/
 # https://uk.mathworks.com/help/stats/lognstat.html
 
@@ -406,7 +413,7 @@ length(unique(smi.ts.df$eic))  # check: 106 unique eics
 # for the center of the radius SMI around.
 
 ##################################################################
-#########     buld distribution and frequency of smi   ###########
+#########     Buld distribution and frequency of smi   ###########
 #########          1951-1995   and   1995-2018         ###########
 ##################################################################
 length(unique(smi.ts.df$plz)) #81
@@ -715,9 +722,6 @@ ggpubr::ggscatter(inspect.3.5, x = ("mon"), y = "sum.freq",
                   cor.coef = TRUE, cor.method = "pearson"     ) 
 ##################################################################
 
-
-##################################################################
-
 ##########     stats per fuel type of power plant       ###########
 # make a dataframe extract on demand
 extract.pp.df<-fuel.smi.out.stat.df
@@ -857,7 +861,7 @@ ggplot(r.df, aes(x=x, y=y)) +
 
 
 ##################################################################
-#########    PLOT SMI comparison 1951-2014 2015-2018   ###########
+#########    PLOT SMI comparison 1951-2014 2015-2018   ###########  Plot power plants outages 
 ##################################################################
 # plot where these stations are
 # for this we need a slice raster file
