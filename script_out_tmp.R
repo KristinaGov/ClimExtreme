@@ -5,7 +5,8 @@ rm(list=ls(all=TRUE))
 packs <- c("dplyr", "plyr","tidyr","raster","ggplot2", "ggnewscale",
            "RColorBrewer","ggpubr","readxl", "pastecs", "ggExtra",
            "CommEcol", "fBasics", "EnvStats", "geosphere", "ggpmisc","cowplot",
-           "lubridate","tidyquant", "gridExtra", "matrixStats", "viridis")
+           "lubridate","tidyquant", "gridExtra", "matrixStats", "viridis",
+           "psych","plyr","car","semPLS","semTools","lmtest", "lavaan","semTools")
 for (i in 1:length(packs)) {
   pack <- packs[i]
   if(!is.element(pack, installed.packages()[,1]))
@@ -21,7 +22,7 @@ setwd(mydir)
 ###################################################################
 
 ##################################################################
-#########                read files                    ###########
+#########                Read files                    ###########
 ##################################################################
 # Steps:
 # 1. Read big_out_data containing outages+ all outages (per generation and generation unit).
@@ -56,7 +57,38 @@ plz.eic.df<-as.data.frame(readxl::read_excel("./data_plz_util/plz_eic_data.xlsx"
 # 7. Create time stamp:
 timedate.df<-data.frame(date=seq(as.Date("1951/1/1"), as.Date("2018/12/31"), by="months"))
 timedate.df$period<-seq(1,dim(timedate.df)[1], by=1)
+##################################################################
 
+
+##################################################################
+#########             Read HOURLY temperatures         ###########
+##################################################################
+files.ls<-as.list(list.files(path = "./data_temp/stations_hr/tempfiles/", 
+                             all.files = T, 
+                             full.names = T,
+                             pattern = "produkt_tu_stunde") )
+length(files.ls) # 20
+# Check that the list items exist:
+exist.list1<-list()
+for (i in 1:length(files.ls)) {
+  exist.list1[[i]]<-file.exists(files.ls[[i]])
+}
+take<-c("STATIONS_ID","MESS_DATUM","TT_TU")
+stations.data.ls<-list()
+for (i in 1:length(files.ls)) {
+  temp.stations.tb<-read.table(files.ls[[i]], header = TRUE, sep = ";")
+  stations.data.ls[[i]]<-temp.stations.tb[take]
+}
+stations.data.df<-as.data.frame(dplyr::bind_rows(stations.data.ls[1:length(stations.data.ls)]))
+# -999 is default NA value in the CDC data. remove it for defaul R designation NA
+stations.data.df$TT_TU[stations.data.df$TT_TU == "-999"]<-NA
+# Create date stamps
+stations.data.df$MESS_DATUM<-strptime(stations.data.df$MESS_DATUM,format = "%Y%m%d%H")
+colnames(stations.data.df)<-c("id","date","tmpr")
+
+# Read data about weather stations:
+stations.det.df<-as.data.frame(readxl::read_excel("./data_temp/list_stations.xlsx", 
+                                                  sheet = "stat", col_names = T))
 ##################################################################
 
 ##################################################################
@@ -89,7 +121,6 @@ extract.eic.fuel.df[, c ("bcode","name", "zone","val_from", "val_to","voltage",
 # Merge together two databases about outages and fuel and installed installed capacities:
 outages.df.t<-dplyr::left_join(big.out.df, extract.eic.fuel.df, by=c("production_RegisteredResource.mRID"="peic"))
 outages.df.t<-dplyr::filter(outages.df.t, fuel!="NA")
-
 outages.df<-dplyr::left_join(outages.df.t, plz.eic.df, by=c("production_RegisteredResource.mRID"="production_RegisteredResource.mRID"))
 
 # Add time stamps:
@@ -105,11 +136,11 @@ outages.df[,c("start_DateAndOrTime.date" , "start_DateAndOrTime.time" ,
 ) ]<-NULL
 ##################################################################
 
-
 ##################################################################
-#              Expand to HOURLY outages time series              #
+#              Expand to hourly outages time series              #
 ##################################################################
 # Expand start and end dates to turn it to time series - showing the length of outages.
+# And showing how much capacity was out at a time.
 # Desired frequency of the  time series - one hour:
 for.ls<-list()
 for (row in 1:nrow(outages.df)) {
@@ -122,7 +153,7 @@ for (row in 1:nrow(outages.df)) {
   for.ls[[row]]<-for.df
 }
 hourly.ts.out<-dplyr::bind_rows(for.ls[1:length(for.ls)])
-dim(hourly.ts.out) # 464637     17
+dim(hourly.ts.out) # 464637     16
 # Find the quantity [MW] on outage - in the database "0" means "0" MW from the installed capacity was available. 
 # Quantity shows AVAILABLE capacity from installed:
 hourly.ts.out$quantity_out<-hourly.ts.out$production_RegisteredResource.pSRType.powerSystemResources.nominalP-hourly.ts.out$quantity
@@ -133,46 +164,17 @@ hourly.ts.out$date.time<-ymd_hms(hourly.ts.out$date.time)
 
 
 ##################################################################
-#########             Read HOURLY temperatures         ###########
-##################################################################
-files.ls<-as.list(list.files(path = "./data_temp/stations_hr/tempfiles/", 
-                             all.files = T, 
-                             full.names = T,
-                             pattern = "produkt_tu_stunde") )
-length(files.ls) # 20
-# Check that the list items exist:
-exist.list1<-list()
-for (i in 1:length(files.ls)) {
-  exist.list1[[i]]<-file.exists(files.ls[[i]])
-}
-take<-c("STATIONS_ID","MESS_DATUM","TT_TU")
-stations.data.ls<-list()
-for (i in 1:length(files.ls)) {
-  temp.stations.tb<-read.table(files.ls[[i]], header = TRUE, sep = ";")
-  stations.data.ls[[i]]<-temp.stations.tb[take]
-}
-stations.data.df<-as.data.frame(dplyr::bind_rows(stations.data.ls[1:length(stations.data.ls)]))
-# -999 is default NA value in the CDC data. remove it for defaul R designation NA
-stations.data.df$TT_TU[stations.data.df$TT_TU == "-999"]<-NA
-# Create date stamps
-stations.data.df$MESS_DATUM<-strptime(stations.data.df$MESS_DATUM,format = "%Y%m%d")
-stations.data.df$MESS_DATUM<-as.POSIXct(stations.data.df$MESS_DATUM,
-                                        origin=as.character(stations.data.df$MESS_DATUM[1]), 
-                                        format = "%Y-%m-%d")
-colnames(stations.data.df)<-c("id","date","tmpr")
-class(stations.data.df$date)
-stations.data.df$date<-as.Date(stations.data.df$date, tz="CET")
-# Read data about weather stations:
-stations.det.df<-as.data.frame(readxl::read_excel("./data_temp/list_stations.xlsx", 
-                                                  sheet = "stat", col_names = T))
-##################################################################
-
-##################################################################
 #########               Plot some outages              ###########
 ##################################################################
+# Quick scatter plot for nuclear power, outage duration (in days):
 ggscatter(dplyr::filter(outages.df, fuel=="nuc"), x="st.datetime", y="duration_days")
 
-# scatter plot of outages per months for the chosen capacity:
+# Scatter plot of outages per months for the chosen capacity:
+# (here we use outages.df that has data only about occurrence,
+# therefore the plot shows points - occurrences, and position of
+# the point shows the duration estimated in the df by st.date-end.date.
+# This plot does not show how much power was out at each month, as some outages
+# exceed one month.)
 main.plot<- ggplot2::ggplot( dplyr::filter(outages.df,  fuel %in% c("coal"), duration_days<100 ), 
                              aes(month(st.datetime), duration_days, color=fuel)) + 
   geom_point() + 
@@ -194,6 +196,7 @@ xdens.plot<-axis_canvas(main.plot, axis="x")+
 xdens.plot
 p.main <- insert_xaxis_grob(main.plot, xdens.plot, grid::unit(.2, "null"), position = "top")
 ggdraw(p.main)
+#ggsave("./Rplots/scatterplot_outages_months.png")
 ##################################################################
 # Density plot for 2015 - 2019 of outages for the following capacities:
 capnames<-data.frame(cap=c("coal","gas","lignite","nuc"), names=c("Coal","Gas","Lignite","Nuclear"))
@@ -214,6 +217,7 @@ plt<-ggplot(data=dplyr::filter(outages.df , year  %in% c("2015", "2016","2017", 
        y = "Density",
        fill="Fuel types")
 plt
+#ggsave("./Rplots/densityplot_outages_months.png")
 ##################################################################
 
 
@@ -221,16 +225,16 @@ plt
 #########                  TEMPERATURES                ###########
 ##################################################################
 # Filter for the dates for which we have the outages data:
-stations.data.df<-subset(stations.data.df )
-stations.df<-as.data.frame(unique(stations.data.df$date))
+stations.data.df.r<-subset(stations.data.df, date>=as.Date("2015-01-01"))
+stations.df<-as.data.frame(unique(stations.data.df.r$date))
 colnames(stations.df)<-"date"
 # Take unique stations id:
-length(unique(stations.data.df$id)) #20
+length(unique(stations.data.df$id)) # Check: 20
 stations.id<-as.data.frame(unique(stations.data.df$id))
 colnames(stations.id)<-"id"
 # Join to one file with all data on the samples stations:
 about.stations.df<-dplyr::left_join(stations.id, stations.det.df, by=c("id"="id") )
-
+# Combine two databases:
 for (i in 1:dim(stations.id)[1]) {
   tomerge.df<-dplyr::select(dplyr::filter(stations.data.df, id==about.stations.df[i,1]),
                             c("date", "tmpr"))
@@ -238,11 +242,6 @@ for (i in 1:dim(stations.id)[1]) {
   colnames(tomerge.df)<-c("date", cname)
   stations.df<-left_join(stations.df, tomerge.df, by=c("date"="date"))
 }
-# For the johansen test stations.df must have a monthly time resolution
-mon.stations.df<-group_by(stations.df, month=floor_date(date,"month"))
-agg<-colnames(mon.stations.df[,2:(dim(mon.stations.df)[2]-1)])
-mon.stations.df<-aggregate(mon.stations.df[,agg], list(mon.stations.df$month), mean)
-colnames(mon.stations.df)<-c("date", agg)
 ##################################################################
 
 
@@ -277,7 +276,6 @@ for (i in 1:dim(outaged.pp.df)[1]) {
                         id.st=stat.loc.df[which.min(stat.loc.df$euc),"id"])
   lonlat.ls[[i]]<-lonlat.df
 }
-
 #sapply(plz.lonlat.ls[[1]], class)
 loc.stat.df<- dplyr::bind_rows(lonlat.ls[1:length(lonlat.ls)])
 sum(is.na(loc.stat.df$lon)) # has to be 0
@@ -289,34 +287,36 @@ sum(is.na(loc.stat.df$lat)) # has to be 0
 #                 ANALYSE TEMP vs OUTAGES 
 #                         MONTHLY
 ##################################################################
-
+# For the test stations.df must have a monthly time resolution
+mon.stations.df<-group_by(stations.df, month=floor_date(date,"month"))
+agg.m<-colnames(mon.stations.df[,2:(dim(mon.stations.df)[2]-1)])
+mon.stations.df<-aggregate(mon.stations.df[,agg.m], list(mon.stations.df$month), mean)
+colnames(mon.stations.df)<-c("date", agg.m)
 # Filter temperatures data for the period in outages set data:
 recent.tempr.df<-mon.stations.df %>% subset(date>="2015-01-01")
+# Find max across all stations:
 recent.tempr.df$max<-recent.tempr.df[,-1] %>% apply(1, max, na.rm=TRUE)
-
+# Choose columns:
 filter.tempr.df<-dplyr::select(recent.tempr.df, c("date","max"))
-
-filter.outages.df<-dplyr::select(dplyr::filter(extract.out.1, 
-                                               fuel %in% c("nuc" 
-                                                           ,"coal"
-                                                           ,"lignite"
-                                                           ,"gas"
-                                                           ,"ps"
-                                               )),  
-                                 c("date","freq","fuel"))
-
+# Filter the necessary fuels and columns from the .df:
+filter.outages.df.0<-dplyr::select(dplyr::filter(hourly.ts.out, 
+                                               fuel %in% c("nuc" ,"coal","lignite","gas","ps")),  
+                                 c("date.time","production_RegisteredResource.mRID","fuel"))
 # Calculate all outages in a month:
-filter.outages.df$date<-as.Date(filter.outages.df$date)
-scatter.data<-left_join(filter.tempr.df,
-                        filter.outages.df,
-                        by=c("date"="date"))
+filter.outages.df<-plyr::ddply(filter.outages.df.0, .(as.Date(date.time, "%Y-%m", tz="CET"), fuel), summarise, 
+                               freq=length(unique(production_RegisteredResource.mRID)))
+colnames(filter.outages.df)<-c("date","fuel","freq")
+# all outages in a month. Don't account for fuel type:
+filter.outages.dff<-plyr::ddply(filter.outages.df.0, .(as.Date(date.time, "%Y-%m", tz="CET")), summarise, 
+                                freq=length(unique(production_RegisteredResource.mRID)))
+colnames(filter.outages.dff)<-c("date","freq")
+# All generation types on one graph:
+scatter.data<-left_join(filter.tempr.df, filter.outages.df, by=c("date"="date"))
 scatter.data[,c("month(date)","year(date)","production_RegisteredResource.mRID", "in_cap" )]<-NULL
-colnames(scatter.data)<-c("date","temperature","freq","fuel")
+colnames(scatter.data)<-c("date","temperature","fuel","freq")
 scatter.data$fuel<-as.factor(scatter.data$fuel)
 scatter.data$year<-as.factor(lubridate::year(scatter.data$date))
-
 scatter.data.1f<-dplyr::filter(scatter.data, freq>=0 & temperature>=0)
-
 formula <-y ~ x
 ggplot(scatter.data.1f, aes(x=temperature, y=freq, color=fuel))+
   geom_point(alpha = 1, aes(shape=year))+
@@ -331,135 +331,128 @@ ggplot(scatter.data.1f, aes(x=temperature, y=freq, color=fuel))+
                   aes(label = paste("P-value = ", signif(..p.value..), sep = "")),
                   size = 3)
 
-ggscatter(scatter.data.1f, x ="temperature", y = "freq",
-          add = "reg.line",  # Add regressin line
-          conf.int = TRUE,
-          #size = 3, alpha = 0.6,
-          ylab="Number of outages per month",
-          rug = F ,
-          ellipse = F,
-          xlab="Monthly mean temperature",
-          xlim=c(10,28)) +
-  stat_cor(method = "pearson")
+# Without considering fuel types:
+scatter.data<-left_join(filter.tempr.df, filter.outages.dff, by=c("date"="date"))
+scatter.data[,c("month(date)","year(date)","production_RegisteredResource.mRID", "in_cap" )]<-NULL
+colnames(scatter.data)<-c("date","temperature","freq")
+scatter.data$year<-as.factor(lubridate::year(scatter.data$date))
 
+scatter.data.1f<-dplyr::filter(scatter.data, freq>=0 & temperature>=0)
+ggplot(scatter.data.1f, aes(x=temperature, y=freq))+
+  geom_point(alpha = 1, aes(shape=year))+
+  geom_smooth(method = "lm",na.rm = T,formula = formula)+
+  stat_poly_eq(aes(label = paste(..rr.label..)),
+               label.x.npc = "right",
+               formula = formula, parse = TRUE, 
+               size = 3)+
+  stat_fit_glance(method = "lm",
+                  method.args = list(formula = formula),
+                  #geom = 'text',
+                  aes(label = paste("P-value = ", signif(..p.value..), sep = "")),
+                  size = 3) +
+  labs(x="Temperature [°C]", y= "Frequency of outages", shape="Year")
+#ggsave("./Rplots/Scatterplot_lm_out_tmpr_mon.png")
+# The p-value for each independent variable tests the null hypothesis that the variable 
+# has no correlation with the dependent variable.
+reg<-lm(freq ~ temperature, data=scatter.data)
+summary(reg)
+# Residuals:
+# Min      1Q       Median      3Q      Max 
+# -5.8862 -1.4612   -0.2065     1.8486  5.9151 
+# When assessing how well the model fit the data, you should look for a symmetrical distribution 
+# across these points on the mean value zero (0). We can see that the distribution 
+# of the residuals appear to be symmetrical. 
+# The t-statistic values are relatively far away from zero and are large relative to the standard 
+# error, which could indicate a relationship exists.
+# (<2e-16 ***, 0.0369 *) p-value < 0.05 for the intercept and the slope indicates that we can reject 
+# the null hypothesis, which allows us to conclude that there is a relationship between freq and temperatures.
+# Residual Standard Error is measure of the quality of a linear regression fit: 2.437
+# The percentage error is (Res.st.error/Intercept) = (2.437/9.46349)*100 =25.75%
+# The R-squared (R2) statistic provides a measure of how well the model is fitting the actual data.
+# It always lies between 0 and 1: i.e.: a number near 0 represents a regression that does not explain the 
+# variance in the response variable well and a number close to 1 does explain the observed variance in the response variable.
+# R2 = 0.09125 (9%)
+# F-statistic is a good indicator of whether there is a relationship between our predictor and the response variables. 
+# The further the F-statistic is from 1 the better it is -> 4.619
+# The p-value: 0.03691 < 0.05 *
 
-ggplot(scatter.data.1f)+
-  geom_bar(aes(x=as.factor(temperature), y=freq , fill=fuel), stat = "identity", position = "stack")
-
-
+# For normal distribution of the residuals: the p-value > 0.05 implies that the distribution of the data are not 
+# significantly different from normal distribution. 
+shapiro.test(reg$residuals)
+# 0.9823 > 0.05 -> We can assume the normality.
 
 ##################################################################
 #                 ANALYSE TEMP vs OUTAGES 
-#                         daily
+#                         HOURLY
 ##################################################################
+# Merge hourly ts of temperatures and outages together:
+# hourly.ts.out and stations.df
+filter.tempr.hr.df<-stations.df %>% subset(date>="2015-01-01")
+# Take maximum/min/mean temperatures from all the stations reports:
+filter.tempr.hr.df$max<-filter.tempr.hr.df[,-1] %>% apply(1, mean, na.rm=TRUE)
+# Take necessary columns:
+filter.tempr.hr.df<-filter.tempr.hr.df[,c("date","max")]
 
-take2<-c("st.datetime","end.datetime",
-         "production_RegisteredResource.mRID",
-         "freq", "ratio")
-big.out.extr.df<-out.ts.df[,take2]
-big.out.extr.df$out.start<-as.Date(big.out.extr.df$st.datetime, "%Y-%m-%d")
-dim(big.out.extr.df) #9401
+filter.outages.hr.df0<-dplyr::select(dplyr::filter(hourly.ts.out, 
+                                                    fuel %in% c("nuc","coal","lignite","gas","ps")),  
+                                      c("date.time","production_RegisteredResource.mRID","fuel"))
+# Calculate all outages in a month:
+filter.outages.hr.df<-plyr::ddply(filter.outages.hr.df0, .(floor_date(filter.outages.hr.df0$date.time, unit="hour")), summarise, 
+                               freq=length(unique(production_RegisteredResource.mRID)))
+colnames(filter.outages.hr.df)<-c("date","freq")
 
-# add fuel types to the eics in outages
-fuel.big.out.df<-dplyr::left_join(big.out.extr.df,
-                                  unique(eic.fuel.df[,c("peic","fuel")]),
-                                  by=c("production_RegisteredResource.mRID"="peic"))
-dim(fuel.big.out.df) #9401
+scatter.data.4<-left_join(filter.tempr.hr.df,  filter.outages.hr.df, by=c("date"="date"))
+str(scatter.data.4)
 
-# calculate all outages per day (we have now also per hours  / minutes)
-fuel.big.out.df<-subset(fuel.big.out.df, fuel %in% c("coal","lignite","gas","nuc"))
-dim(fuel.big.out.df) # 8835
-# sum per datetime for each fuel type
-filter.outages.daily.df<- plyr::ddply(fuel.big.out.df, .(out.start, fuel), summarise, sum.freq=sum(freq, na.rm = T))
-# or do not sum for density graph
-filter.outages.daily.dens.df<-fuel.big.out.df[,c("out.start","fuel","freq")]
+scatter.data.4.1<-scatter.data.4
+scatter.data.4.1$logmax<-log(scatter.data.4.1$max)
+scatter.data.4.1$logfreq<-log(scatter.data.4.1$freq)
 
-recent.tempr.daily<-stations.df %>% subset(date>="2015-01-01")
-# take maximum/min/mean temperatuire from all the stations reports
-recent.tempr.daily$max<-recent.tempr.daily[,-1] %>% apply(1, mean, na.rm=TRUE)
+scatter.data.4.1$lagmax<-dplyr::lag(scatter.data.4.1$max, 1)
+scatter.data.4.1$lagfreq<-dplyr::lag(scatter.data.4.1$freq, 1)
 
-filter.tempr.daily<-recent.tempr.daily[,c("date","max")]
+scatter.data.4.1$loglagmax<-log(scatter.data.4.1$max/scatter.data.4.1$lagmax)
+scatter.data.4.1$loglagfreq<-log(scatter.data.4.1$freq/scatter.data.4.1$lagfreq)
 
-scatter.data.2<-left_join(filter.tempr.daily,
-                          filter.outages.daily.df, 
-                          by=c("date"="out.start"))
-median(scatter.data.2$max)
-stdev(scatter.data.2$max)
-median(scatter.data.2$sum.freq,na.rm=T)
+#scatter.data.4.1<-drop_na(scatter.data.4.1)
+#ggplot(scatter.data.4.1, aes(date, loglagmax)) + geom_line()
+# There are three outlines
+scatter.data.4.1<-subset(scatter.data.4.1, loglagmax>=-35)
 
-scatter.data.2f<-dplyr::filter(scatter.data.2, date >="2015-01-01", date <="2018-12-31")
+p1<-ggplot(scatter.data.4.1, aes(date, loglagmax)) + geom_line() +
+    xlab("Year") + ylab(expression(paste("Ln(", T[n], "/", T[n-1],")")))
+p2<-ggplot(scatter.data.4.1, aes(date, loglagfreq)) + geom_line() +
+    xlab("Year") + ylab(expression(paste("Ln(", Out[n], "/", Out[n-1],")")))
+ggarrange(p1, p2,labels = c("(a)", "(b)"), ncol = 1, nrow = 2)
+#gsave("./Rplots/tseries_out_tmpr_ln.png")
 
-ggscatter(scatter.data.2f, x ="max", y = "sum.freq",
-          #add = "reg.line",  # Add regressin line
-          ylab="Number of outages per day",
-          xlab="Daily mean temperature",
-          xlim=c(0,35),
-          conf.int = F,
-          #size = 3, alpha = 0.6
-)+
-  stat_cor(method = "pearson")
+reg.2<-lm(loglagfreq ~ loglagmax, data=scatter.data.4.1)
+summary(reg.2)
+# Residuals:
+# Min      1Q        Median   3Q       Max 
+# -0.69339 -0.00030  0.00004  0.00029  0.53932 
+# When assessing how well the model fit the data, you should look for a symmetrical distribution 
+# across these points on the mean value zero (0). We can see that the distribution 
+# of the residuals appears to be symmetrical. 
 
+# The t-statistic values are relatively far away from zero and are large relative to the standard 
+# error, which could indicate a relationship exists.
+# (0.99231, 0.00523 **) p-value < 0.05 for the slope indicates that we can reject 
+# the null hypothesis, which allows us to conclude that there is a relationship between freq and temperatures.
 
-scatter.data.2f<-drop_na(scatter.data.2f)
+# Residual Standard Error is measure of the quality of a linear regression fit: 0.07053
+# The percentage error is mach larger than the intercept. 
 
-capnames<-data.frame(cap=c("coal","gas","lignite","nuc"), names=c("Coal","Lignite","Nuclear"))
+# The R-squared (R2) statistic provides a measure of how well the model is fitting the actual data.
+# It always lies between 0 and 1: i.e.: a number near 0 represents a regression that does not explain the 
+# variance in the response variable well and a number close to 1 does explain the observed variance in the response variable.
+# R2 = 0.0001958 (0.01%)
 
-main<-ggplot2::ggplot(scatter.data.2f, aes( x =max, y = sum.freq) ) +
-  geom_point(aes(color=as.factor(fuel)), alpha = 1)+
-  scale_color_brewer(palette="Dark2", labels=capnames[,"names"])+
-  theme_classic() + 
-  labs(title="Frequency of outages per temperature range",
-       subtitle = "(number of occurences per fuel type and time moment: data from 2015 to 2018)",
-       x= paste("Temperature (Germany mean daily soil temperature in 5 cm depth °C)", sep=""), 
-       y = "Frequency of outages",
-       color="Fuel types")
-#main
+# F-statistic is a good indicator of whether there is a relationship between our predictor and the response variables. 
+# The further the F-statistic is from 1 the better it is -> 4.619
 
-xdens<-axis_canvas(main, axis="x")+
-  geom_density(data=scatter.data.2f,
-               aes(x=max, fill=as.factor(fuel)),
-               alpha=0.5, size=0.2) +
-  scale_fill_brewer(palette="Dark2")
-#xdens
-
-#ydens<-axis_canvas(main, axis = "y", coord_flip = TRUE)+
-#  geom_density(data = scatter.data.2f, 
-#               aes(x = sum.freq, fill = as.factor(fuel)),
-#               alpha = 0.5, size = 0.2)+
-#  coord_flip()+
-#  ggpubr::fill_palette("jco")
-
-p1 <- insert_xaxis_grob(main, xdens, grid::unit(.2, "null"), position = "top")
-#p2<- insert_yaxis_grob(p1, ydens, grid::unit(.2, "null"), position = "right")
-ggdraw(p1)
+# The p-value: 0.005226 < 0.05 **
 
 
-##################################################################
-#                   OUTAGES PER TEMPERATURE STEP                 #
-##################################################################
-# calculate outages per temperature step
-step<-5
-tmp.step<-seq(0,35,by=step)
-temp.out.step.ls<-list()
 
-# if neede filter out the years or dates
-scatter.data.3f<-dplyr::filter(scatter.data.2, date >="2018-01-01", date <="2018-12-31")
-
-for (i in 1:(length(tmp.step)-1)) {
-  temp.out.1<-dplyr::filter(scatter.data.3f, scatter.data.3f$max>=tmp.step[i] & scatter.data.3f$max<=tmp.step[i+1])
-  temp.out.1$step<-tmp.step[i]
-  temp.out.step.ls[[i]]<-plyr::ddply(temp.out.1, .(step, fuel), summarise, sum.freq=sum(sum.freq, na.rm = T))
-}
-temp.out.step.df<- dplyr::bind_rows(temp.out.step.ls[1:length(temp.out.step.ls)])
-temp.out.step.df<-drop_na(temp.out.step.df)
-
-ggplot2::ggplot(temp.out.step.df) +
-  geom_bar(aes(x=as.factor(step), y=sum.freq, fill=as.factor(fuel)), stat="identity") + 
-  theme_classic() + 
-  scale_fill_brewer(palette="PRGn") + 
-  labs(title="Frequency of outages per temperature range",
-       subtitle = "(number of occurences per fuel type and time moment: data for 2018)",
-       x= paste("Temperature (Germany mean daily soil temperature in 5 cm depth °C)", sep=""), 
-       y = "Frequency of outages",
-       fill="Fuel")
 
