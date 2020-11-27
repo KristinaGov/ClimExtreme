@@ -423,8 +423,9 @@ p1<-ggplot(scatter.data.4.1, aes(date, loglagmax)) + geom_line() +
     xlab("Year") + ylab(expression(paste("Ln(", T[n], "/", T[n-1],")")))
 p2<-ggplot(scatter.data.4.1, aes(date, loglagfreq)) + geom_line() +
     xlab("Year") + ylab(expression(paste("Ln(", Out[n], "/", Out[n-1],")")))
-ggarrange(p1, p2,labels = c("(a)", "(b)"), ncol = 1, nrow = 2)
-#gsave("./Rplots/tseries_out_tmpr_ln.png")
+ggarrange(p1, p2, labels = c("(a)", "(b)"), ncol = 1, nrow = 2,
+          font.label = list(size = 11, color = "black"))
+#ggsave("./Rplots/tseries_out_tmpr_ln.png")
 
 reg.2<-lm(loglagfreq ~ loglagmax, data=scatter.data.4.1)
 summary(reg.2)
@@ -452,7 +453,5 @@ summary(reg.2)
 # The further the F-statistic is from 1 the better it is -> 4.619
 
 # The p-value: 0.005226 < 0.05 **
-
-
 
 
