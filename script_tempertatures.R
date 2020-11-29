@@ -9,20 +9,19 @@
 rm(list=ls(all=TRUE))
 
 #########                call libraries                 ###########
-library(dplyr)
-library(tidyr)
-library(readxl)
-library(fitdistrplus)
-library(fBasics)
-library(EnvStats)
-library(xts)
-library(lubridate)  
-library(TTR) #SMA function
-library(ggplot2)
-library(ggfortify)
-library(scales)
+packs <- c("dplyr", "plyr","tidyr","raster","ncdf4","ggplot2", "ggnewscale",
+           "RColorBrewer","ggpubr","readxl", "pastecs","xts", "TTR","ggfortify",
+           "CommEcol", "fBasics", "EnvStats", "geosphere", "ggpmisc", "scales",
+           "lubridate","tidyquant", "gridExtra", "tidyverse", "viridis",
+           "ts", "strucchange", "fxregime", "zoo", "fitdistrplus")
+for (i in 1:length(packs)) {
+  pack <- packs[i]
+  if(!is.element(pack, installed.packages()[,1]))
+  {install.packages(pack)
+  }else {print(paste(packs[i]," already installed"))}
+  require(pack,character.only=TRUE)
+}
 ###################################################################
-
 
 #########             set working directory             ###########
 mydir<-getwd()
@@ -211,13 +210,13 @@ ggplot()+
                         n.years, "-years simple moving average for DE maximum (red)","\n" ,
                         "Air temperature at 2 meter high", sep=""),
        y="Temperature [C°]") +
-  scale_x_datetime(name="Date", labels = date_format("%Y"), 
-                   expand=c(0,0),date_breaks="5 years",
+  scale_x_datetime(name="", labels = date_format("%Y"), 
+                   expand=c(0,0),date_breaks="10 years",
                    date_minor_breaks = "years",
                    limits = (c(begin.1,end.1))) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, size=24),
-        axis.text.y = element_text(angle = 90, hjust = 1, size=24),
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size=19),
+        axis.text.y = element_text(angle = 90, hjust = 1, size=19),
         plot.title = element_text(size = 18),
         plot.subtitle = element_text(size = 18),
         axis.title.x = element_text(size=24),
@@ -229,6 +228,6 @@ ggplot()+
         legend.key.size = unit(1,"line"),
         legend.title.align=0.5)
 #ggsave("./Rplots/temperatures.png", dpi = 600, width = 540, height = 310, units = "mm")
-ggsave("./Rplots/temperature_trends.png", dpi = 600, width = 540, height = 310, units = "mm")
+ggsave("./Rplots/temperature_trends.png", dpi = 300, width = 200, height = 200, units = "mm")
 ##################################################################
 # Files are saved in ./Rplot/temperatures.png and ./Rplot/temperatures_trends.png

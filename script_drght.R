@@ -273,18 +273,25 @@ aggregate.smi.ts<-ts(aggregate.smi.ranges$mean, start=c(1951,01,01),frequency=12
 glimpse(aggregate.smi.ts)
 #plot(aggregate.smi.ts)
 
-d <- ts.intersect(y = log(aggregate.smi.ts), y.diff = lag(log(aggregate.smi.ts), -1))
+d <- ts.intersect(log.smi = log(aggregate.smi.ts), log.smi.diff = lag(log(aggregate.smi.ts), -1))
 #plot.ts(d)
 
-sc <- efp(y ~ y.diff, data = d, type = "Score-CUSUM")
-plot(sc, functional = NULL)
+sc <- strucchange::efp(log.smi ~ log.smi.diff, data = d, type = "Score-CUSUM")
+#png(file="./Rplots/struch_change_cusum.png", res =  300, width = 180, height = 125, units = "mm")
+plot(sc, functional = NULL, xlab="",cex.lab=1.2, cex.axis=1.5, main="" )
+#title(xlab="Year", line=4, cex.lab=1.2)
+#dev.off()
+summary(sc)
 
-bd <- fxregimes(y ~ y.diff, data = d, breaks = 5, ic = "BIC")
-plot(bd) #BIC indicating optimal number of breakpoints is 2: 3 periods: 1977, 2006
+bd <- fxregime::fxregimes(log.smi ~ log.smi.diff, data = d, breaks = 5, ic = "BIC")
+#png(file="./Rplots/fxregimes_test_vis.png", res =  300, width = 100, height = 125, units = "mm")
+plot(bd, cex.lab=1, xlab="", main="") #BIC indicating optimal number of breakpoints is 2: 3 periods: 1977, 2006
+#title(xlab="Number of breakpoints", line=3)
+#dev.off()
 summary(bd)
 
-bp <- breakpoints(y ~ y.diff, data = d,  breaks = 5, h=12)
-coef(bp)
+#cit <- confint(bd, level = 0.8)
+
 ##################################################################
 
 ##################################################################
@@ -313,11 +320,23 @@ ggplot(aggregate.smi.range.long, aes(x=date, y=mval, color=mtype, fill=regyear))
   theme_minimal()+
   scale_x_date(labels = scales::date_format("%Y", tz="CET"), date_breaks = "5 years", expand = c(0,0) )+
   scale_y_continuous(expand = c(0,0), limits = c(0,1))+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1), legend.position = "top")+
-  labs(y="SMI", x="", fill="Year", color = "SMI Measurment") +
-  scale_color_brewer(palette = "Dark2", labels = c("min (SMA)", "max (SMA)", "mean (SMA)"))+
-  scale_fill_brewer(palette = "Dark2")
-#ggsave("./Rplots/SMI_timeseries.svg")
+  theme(axis.text.x = element_text(angle = 90, hjust = 1), 
+        text = element_text(size=11),
+        #legend.position = "top",
+        #legend.box="vertical",
+        legend.position=c(0.15,0.75),
+        legend.background = element_rect(fill=alpha('white', 0.75), color="transparent"), 
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 9),
+        legend.key.size = unit(0.5,"line")) +
+  labs(y="SMI", x="", fill="Year:", color = "SMI Measurment:") +
+  scale_color_brewer(palette = "Dark2", labels = c("min (SMA)", "max (SMA)", "mean (SMA)"),
+                     guide = guide_legend(override.aes = list(linetype = c(1, 1, 1),
+                                                              shape = c(16, 16, 16), fill=NA)) )+
+  scale_fill_brewer(palette = "Dark2", labels = c("1951-1977", "1997-2006", "2006-2018"),
+                    guide = guide_legend(override.aes = list(linetype = c(0, 0, 0),
+                                                             shape = c(NA, NA, NA))) )
+ggsave("./Rplots/SMI_timeseries.png", dpi = 300, width = 100, height = 100, units = "mm")
 
 # Look at june and december values.
 aggregate.smi.range.j$minsma<-SMA(aggregate.smi.range.j$min, n = sma_shift)

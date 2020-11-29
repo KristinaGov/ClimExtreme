@@ -1,3 +1,7 @@
+# Script is analyzing the c interrelations between the temperatures data
+# and outages.
+
+
 # Make sure the work space is in pristine condition:
 rm(list=ls(all=TRUE))
 
@@ -290,68 +294,49 @@ sum(is.na(loc.stat.df$lat)) # has to be 0
 # For the test stations.df must have a monthly time resolution
 mon.stations.df<-group_by(stations.df, month=floor_date(date,"month"))
 agg.m<-colnames(mon.stations.df[,2:(dim(mon.stations.df)[2]-1)])
+# Compute monthly means:
 mon.stations.df<-aggregate(mon.stations.df[,agg.m], list(mon.stations.df$month), mean)
 colnames(mon.stations.df)<-c("date", agg.m)
 # Filter temperatures data for the period in outages set data:
 recent.tempr.df<-mon.stations.df %>% subset(date>="2015-01-01")
-# Find max across all stations:
+# Find max (be careful - max of the means of all stations!) across all stations:
 recent.tempr.df$max<-recent.tempr.df[,-1] %>% apply(1, max, na.rm=TRUE)
 # Choose columns:
 filter.tempr.df<-dplyr::select(recent.tempr.df, c("date","max"))
-# Filter the necessary fuels and columns from the .df:
-filter.outages.df.0<-dplyr::select(dplyr::filter(hourly.ts.out, 
-                                               fuel %in% c("nuc" ,"coal","lignite","gas","ps")),  
-                                 c("date.time","production_RegisteredResource.mRID","fuel"))
-# Calculate all outages in a month:
-filter.outages.df<-plyr::ddply(filter.outages.df.0, .(as.Date(date.time, "%Y-%m", tz="CET"), fuel), summarise, 
-                               freq=length(unique(production_RegisteredResource.mRID)))
-colnames(filter.outages.df)<-c("date","fuel","freq")
-# all outages in a month. Don't account for fuel type:
-filter.outages.dff<-plyr::ddply(filter.outages.df.0, .(as.Date(date.time, "%Y-%m", tz="CET")), summarise, 
-                                freq=length(unique(production_RegisteredResource.mRID)))
-colnames(filter.outages.dff)<-c("date","freq")
-# All generation types on one graph:
-scatter.data<-left_join(filter.tempr.df, filter.outages.df, by=c("date"="date"))
-scatter.data[,c("month(date)","year(date)","production_RegisteredResource.mRID", "in_cap" )]<-NULL
-colnames(scatter.data)<-c("date","temperature","fuel","freq")
-scatter.data$fuel<-as.factor(scatter.data$fuel)
-scatter.data$year<-as.factor(lubridate::year(scatter.data$date))
-scatter.data.1f<-dplyr::filter(scatter.data, freq>=0 & temperature>=0)
-formula <-y ~ x
-ggplot(scatter.data.1f, aes(x=temperature, y=freq, color=fuel))+
-  geom_point(alpha = 1, aes(shape=year))+
-  geom_smooth(method = "lm",na.rm = T,formula = formula)+
-  stat_poly_eq(aes(label = paste(..rr.label..)),
-               label.x.npc = "right",
-               formula = formula, parse = TRUE, 
-               size = 3)+
-  stat_fit_glance(method = "lm",
-                  method.args = list(formula = formula),
-                  #geom = 'text',
-                  aes(label = paste("P-value = ", signif(..p.value..), sep = "")),
-                  size = 3)
 
-# Without considering fuel types:
-scatter.data<-left_join(filter.tempr.df, filter.outages.dff, by=c("date"="date"))
+# Filter the necessary fuels and columns from the .df, first create a unique column key:
+filter.outages.df.01<-hourly.ts.out
+filter.outages.df.01$key<-paste(filter.outages.df.01$production_RegisteredResource.mRID, filter.outages.df.01$st.datetime, filter.outages.df.01$end.datetime)
+filter.outages.df.02<-dplyr::select(dplyr::filter(filter.outages.df.01, 
+                                               fuel %in% c("nuc" ,"coal","lignite","gas","ps")),  
+                                               c("date.time","production_RegisteredResource.mRID","key","fuel"))
+# all outages in a month. Don't account for fuel type:
+filter.outages.df<-plyr::ddply(filter.outages.df.02, .(as.Date(date.time, "%Y-%m", tz="CET")), summarise, 
+                                #freq=length(unique(production_RegisteredResource.mRID)))
+                                freq=length(unique(key)))
+colnames(filter.outages.df)<-c("date","freq")
+
+# Graph:
+scatter.data<-left_join(filter.tempr.df, filter.outages.df, by=c("date"="date"))
 scatter.data[,c("month(date)","year(date)","production_RegisteredResource.mRID", "in_cap" )]<-NULL
 colnames(scatter.data)<-c("date","temperature","freq")
 scatter.data$year<-as.factor(lubridate::year(scatter.data$date))
-
 scatter.data.1f<-dplyr::filter(scatter.data, freq>=0 & temperature>=0)
+
 ggplot(scatter.data.1f, aes(x=temperature, y=freq))+
   geom_point(alpha = 1, aes(shape=year))+
-  geom_smooth(method = "lm",na.rm = T,formula = formula)+
+  geom_smooth(method = "lm", na.rm = T,formula = formula)+
   stat_poly_eq(aes(label = paste(..rr.label..)),
                label.x.npc = "right",
                formula = formula, parse = TRUE, 
                size = 3)+
   stat_fit_glance(method = "lm",
                   method.args = list(formula = formula),
-                  #geom = 'text',
                   aes(label = paste("P-value = ", signif(..p.value..), sep = "")),
                   size = 3) +
   labs(x="Temperature [°C]", y= "Frequency of outages", shape="Year")
-#ggsave("./Rplots/Scatterplot_lm_out_tmpr_mon.png")
+#ggsave("./Rplots/Scatterplot_lm_out_tmpr_mon.png", width = 100, height = 100, dpi = 300, units = "mm")
+
 # The p-value for each independent variable tests the null hypothesis that the variable 
 # has no correlation with the dependent variable.
 reg<-lm(freq ~ temperature, data=scatter.data)
@@ -393,12 +378,15 @@ filter.tempr.hr.df$max<-filter.tempr.hr.df[,-1] %>% apply(1, mean, na.rm=TRUE)
 # Take necessary columns:
 filter.tempr.hr.df<-filter.tempr.hr.df[,c("date","max")]
 
-filter.outages.hr.df0<-dplyr::select(dplyr::filter(hourly.ts.out, 
+# Filter the necessary fuels and columns from the .df, first create a unique column key:
+filter.outages.hr.df01<-hourly.ts.out
+filter.outages.hr.df01$key<-paste(filter.outages.hr.df01$production_RegisteredResource.mRID, filter.outages.hr.df01$st.datetime, filter.outages.hr.df01$end.datetime)
+filter.outages.hr.df0<-dplyr::select(dplyr::filter(filter.outages.hr.df01, 
                                                     fuel %in% c("nuc","coal","lignite","gas","ps")),  
-                                      c("date.time","production_RegisteredResource.mRID","fuel"))
+                                                    c("date.time","production_RegisteredResource.mRID","fuel","key"))
 # Calculate all outages in a month:
 filter.outages.hr.df<-plyr::ddply(filter.outages.hr.df0, .(floor_date(filter.outages.hr.df0$date.time, unit="hour")), summarise, 
-                               freq=length(unique(production_RegisteredResource.mRID)))
+                                  freq=length(unique(key)))
 colnames(filter.outages.hr.df)<-c("date","freq")
 
 scatter.data.4<-left_join(filter.tempr.hr.df,  filter.outages.hr.df, by=c("date"="date"))
@@ -426,6 +414,16 @@ p2<-ggplot(scatter.data.4.1, aes(date, loglagfreq)) + geom_line() +
 ggarrange(p1, p2, labels = c("(a)", "(b)"), ncol = 1, nrow = 2,
           font.label = list(size = 11, color = "black"))
 #ggsave("./Rplots/tseries_out_tmpr_ln.png")
+
+# Graph:
+scatter.data.4.1$year<-as.factor(lubridate::year(scatter.data.4.1$date))
+scatter.data.4.2<-scatter.data.4.1
+
+ggplot(scatter.data.4.2, aes(x=max, y=freq))+
+  geom_point(alpha = 1, aes(shape=year))+
+  geom_smooth(method = "lm",na.rm = T,formula = formula)+
+  labs(x="Temperature [°C]", y= "Number of outages at a time point", shape="Year")
+#ggsave("./Rplots/Scatterplot_lm_out_tmpr_hr.png", width = 100, height = 100, dpi = 300, units = "mm")
 
 reg.2<-lm(loglagfreq ~ loglagmax, data=scatter.data.4.1)
 summary(reg.2)
