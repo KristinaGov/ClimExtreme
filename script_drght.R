@@ -312,7 +312,7 @@ aggregate.smi.range.long<-gather(aggregate.smi.range, mtype, mval, c("minsma","m
 my.formula <- y ~ x
 
 ggplot(aggregate.smi.range.long, aes(x=date, y=mval, color=mtype, fill=regyear)) +
-  geom_linerange( aes(ymin = min, ymax = max), col = brewer.pal(4, "Pastel2")[3]) +
+  geom_linerange( aes(ymin = min, ymax = max), col = brewer.pal(6, "Set3")[3], alpha=0.1) +
   geom_smooth(method="lm") +
   #stat_poly_eq(formula = my.formula, aes(label = paste(..rr.label..)),   parse = TRUE) + 
   #stat_cor() +
@@ -325,18 +325,18 @@ ggplot(aggregate.smi.range.long, aes(x=date, y=mval, color=mtype, fill=regyear))
         #legend.position = "top",
         #legend.box="vertical",
         legend.position=c(0.15,0.75),
-        legend.background = element_rect(fill=alpha('white', 0.75), color="transparent"), 
+        legend.background = element_rect(fill=ggplot2::alpha("white", 0.75), color="transparent"), 
         legend.title = element_text(size = 9),
         legend.text = element_text(size = 9),
         legend.key.size = unit(0.5,"line")) +
   labs(y="SMI", x="", fill="Year:", color = "SMI Measurment:") +
-  scale_color_brewer(palette = "Dark2", labels = c("min (SMA)", "max (SMA)", "mean (SMA)"),
+  scale_color_brewer(palette = "Set2", labels = c("min (SMA)", "max (SMA)", "mean (SMA)"),
                      guide = guide_legend(override.aes = list(linetype = c(1, 1, 1),
                                                               shape = c(16, 16, 16), fill=NA)) )+
-  scale_fill_brewer(palette = "Dark2", labels = c("1951-1977", "1997-2006", "2006-2018"),
+  scale_fill_brewer(palette = "Set2", labels = c("1951-1977", "1997-2006", "2006-2018"),
                     guide = guide_legend(override.aes = list(linetype = c(0, 0, 0),
-                                                             shape = c(NA, NA, NA))) )
-ggsave("./Rplots/SMI_timeseries.png", dpi = 300, width = 100, height = 100, units = "mm")
+                                                             shape = c(NA, NA, NA))))
+#ggsave("./Rplots/SMI_timeseries.png", dpi = 300, width = 100, height = 100, units = "mm")
 
 # Look at june and december values.
 aggregate.smi.range.j$minsma<-SMA(aggregate.smi.range.j$min, n = sma_shift)

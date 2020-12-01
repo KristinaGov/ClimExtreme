@@ -179,28 +179,29 @@ ggscatter(dplyr::filter(outages.df, fuel=="nuc"), x="st.datetime", y="duration_d
 # the point shows the duration estimated in the df by st.date-end.date.
 # This plot does not show how much power was out at each month, as some outages
 # exceed one month.)
-main.plot<- ggplot2::ggplot( dplyr::filter(outages.df,  fuel %in% c("coal"), duration_days<100 ), 
+main.plot<- ggplot2::ggplot( dplyr::filter(outages.df,  fuel %in% c("nuc"), duration_days<100 ), 
                              aes(month(st.datetime), duration_days, color=fuel)) + 
   geom_point() + 
-  ggpubr::color_palette("jco")+
+  ggpubr::color_palette("Set3", labels="Nuclear") + 
   theme_classic() + 
   labs(title="Duration of outages started in the respective month",
        subtitle = "(outages data from 2015 to 2019)",
        x= paste("Months"), 
        y = "Duration of outages [days]",
        color="Fuel types")+ 
-  scale_x_continuous(labels = scales::number_format(accuracy = 2))
+  scale_x_continuous(labels = scales::number_format(accuracy = 2)) +
+  theme()
 main.plot
 
 xdens.plot<-axis_canvas(main.plot, axis="x")+
   geom_density(data=dplyr::filter(outages.df,  fuel %in% c("nuc")),
                aes(x=month(st.datetime), fill=as.factor(fuel)),
                alpha=0.3, size=0.2) +
-  ggpubr::fill_palette("jco")
+  ggpubr::fill_palette("Set3")
 xdens.plot
 p.main <- insert_xaxis_grob(main.plot, xdens.plot, grid::unit(.2, "null"), position = "top")
 ggdraw(p.main)
-#ggsave("./Rplots/scatterplot_outages_months.png")
+#ggsave("./Rplots/scatterplot_outages_months.png", width = 100, height = 100, dpi = 300, units = "mm")
 ##################################################################
 # Density plot for 2015 - 2019 of outages for the following capacities:
 capnames<-data.frame(cap=c("coal","gas","lignite","nuc"), names=c("Coal","Gas","Lignite","Nuclear"))
@@ -321,11 +322,13 @@ scatter.data<-left_join(filter.tempr.df, filter.outages.df, by=c("date"="date"))
 scatter.data[,c("month(date)","year(date)","production_RegisteredResource.mRID", "in_cap" )]<-NULL
 colnames(scatter.data)<-c("date","temperature","freq")
 scatter.data$year<-as.factor(lubridate::year(scatter.data$date))
-scatter.data.1f<-dplyr::filter(scatter.data, freq>=0 & temperature>=0)
+formula<- y ~ x
 
-ggplot(scatter.data.1f, aes(x=temperature, y=freq))+
-  geom_point(alpha = 1, aes(shape=year))+
-  geom_smooth(method = "lm", na.rm = T,formula = formula)+
+ggplot(scatter.data, aes(x=temperature, y=freq))+
+  #geom_point(alpha = 1, aes(shape=year)) +
+  geom_point(aes(color=year), position="jitter", alpha=1, size=1.5) +
+  scale_color_brewer(palette="Set3") +
+  geom_smooth(method = "lm",na.rm = T,formula = formula, size=0.5, color="darkblue")+
   stat_poly_eq(aes(label = paste(..rr.label..)),
                label.x.npc = "right",
                formula = formula, parse = TRUE, 
@@ -334,37 +337,44 @@ ggplot(scatter.data.1f, aes(x=temperature, y=freq))+
                   method.args = list(formula = formula),
                   aes(label = paste("P-value = ", signif(..p.value..), sep = "")),
                   size = 3) +
-  labs(x="Temperature [°C]", y= "Frequency of outages", shape="Year")
+  labs(x="Temperature [°C]", y= "Frequency of outages", color="Year")
 #ggsave("./Rplots/Scatterplot_lm_out_tmpr_mon.png", width = 100, height = 100, dpi = 300, units = "mm")
 
 # The p-value for each independent variable tests the null hypothesis that the variable 
 # has no correlation with the dependent variable.
-reg<-lm(freq ~ temperature, data=scatter.data)
-summary(reg)
+reg.1<-lm(freq ~ temperature, data=scatter.data)
+summary(reg.1)
 # Residuals:
 # Min      1Q       Median      3Q      Max 
-# -5.8862 -1.4612   -0.2065     1.8486  5.9151 
+# -8.9328 -3.5942   -0.2928     2.5720  12.9371  
 # When assessing how well the model fit the data, you should look for a symmetrical distribution 
 # across these points on the mean value zero (0). We can see that the distribution 
-# of the residuals appear to be symmetrical. 
+# of the residuals appear to be quite symmetrical. 
+
 # The t-statistic values are relatively far away from zero and are large relative to the standard 
 # error, which could indicate a relationship exists.
-# (<2e-16 ***, 0.0369 *) p-value < 0.05 for the intercept and the slope indicates that we can reject 
+
+# (7.72e-11 ***, 0.0742) p-value 0.07418 > 0.05 for the intercept and the slope indicates that we can not reject 
 # the null hypothesis, which allows us to conclude that there is a relationship between freq and temperatures.
-# Residual Standard Error is measure of the quality of a linear regression fit: 2.437
-# The percentage error is (Res.st.error/Intercept) = (2.437/9.46349)*100 =25.75%
+
+# Residual Standard Error is measure of the quality of a linear regression fit: 4.87
+# The percentage error is (Res.st.error/Intercept) = (2.437/12.2149)*100 = 19.955 %
+
 # The R-squared (R2) statistic provides a measure of how well the model is fitting the actual data.
 # It always lies between 0 and 1: i.e.: a number near 0 represents a regression that does not explain the 
 # variance in the response variable well and a number close to 1 does explain the observed variance in the response variable.
-# R2 = 0.09125 (9%)
+# R2 = 0.06766 (6 %)
+
 # F-statistic is a good indicator of whether there is a relationship between our predictor and the response variables. 
-# The further the F-statistic is from 1 the better it is -> 4.619
-# The p-value: 0.03691 < 0.05 *
+# The further the F-statistic is from 1 the better it is -> 3.338
+# The p-value: 0.07418 > 0.05 
+
+# The overall test is insignificant.
 
 # For normal distribution of the residuals: the p-value > 0.05 implies that the distribution of the data are not 
 # significantly different from normal distribution. 
 shapiro.test(reg$residuals)
-# 0.9823 > 0.05 -> We can assume the normality.
+# 0.1278 > 0.05 -> We can assume the normality.
 
 ##################################################################
 #                 ANALYSE TEMP vs OUTAGES 
@@ -418,38 +428,98 @@ ggarrange(p1, p2, labels = c("(a)", "(b)"), ncol = 1, nrow = 2,
 # Graph:
 scatter.data.4.1$year<-as.factor(lubridate::year(scatter.data.4.1$date))
 scatter.data.4.2<-scatter.data.4.1
+formula<- y ~ x
 
 ggplot(scatter.data.4.2, aes(x=max, y=freq))+
-  geom_point(alpha = 1, aes(shape=year))+
-  geom_smooth(method = "lm",na.rm = T,formula = formula)+
-  labs(x="Temperature [°C]", y= "Number of outages at a time point", shape="Year")
+  #geom_point(alpha = 1, aes(shape=year))+
+  geom_point(aes(color=year), position="jitter", alpha=1, size=0.3) +
+  scale_color_brewer(palette="Set3") +
+  geom_smooth(method = "lm",na.rm = T,formula = formula, size=0.5, color="darkblue")+
+  labs(x="Temperature [°C]", y= "Number of outages at a time point", color="Year")  
+  #theme_light()
 #ggsave("./Rplots/Scatterplot_lm_out_tmpr_hr.png", width = 100, height = 100, dpi = 300, units = "mm")
 
 reg.2<-lm(loglagfreq ~ loglagmax, data=scatter.data.4.1)
 summary(reg.2)
 # Residuals:
 # Min      1Q        Median   3Q       Max 
-# -0.69339 -0.00030  0.00004  0.00029  0.53932 
+# -0.69352 -0.00056  0.00002  0.00044  0.81134 
 # When assessing how well the model fit the data, you should look for a symmetrical distribution 
 # across these points on the mean value zero (0). We can see that the distribution 
-# of the residuals appears to be symmetrical. 
+# of the residuals appears to be quite symmetrical. 
 
 # The t-statistic values are relatively far away from zero and are large relative to the standard 
 # error, which could indicate a relationship exists.
-# (0.99231, 0.00523 **) p-value < 0.05 for the slope indicates that we can reject 
+
+# (0.91887, 0.00034 ***) p-value 0.00034*** < 0.05 for the slope indicates that we can reject 
 # the null hypothesis, which allows us to conclude that there is a relationship between freq and temperatures.
 
-# Residual Standard Error is measure of the quality of a linear regression fit: 0.07053
+# Residual Standard Error is measure of the quality of a linear regression fit: 0.0761
 # The percentage error is mach larger than the intercept. 
 
 # The R-squared (R2) statistic provides a measure of how well the model is fitting the actual data.
 # It always lies between 0 and 1: i.e.: a number near 0 represents a regression that does not explain the 
 # variance in the response variable well and a number close to 1 does explain the observed variance in the response variable.
-# R2 = 0.0001958 (0.01%)
+# R2 = 0.0003696 (0.003%)
 
 # F-statistic is a good indicator of whether there is a relationship between our predictor and the response variables. 
 # The further the F-statistic is from 1 the better it is -> 4.619
 
-# The p-value: 0.005226 < 0.05 **
+# The p-value: 0.00034 < 0.05 ***
+
+##################################################################
+#                   OUTAGES PER TEMPERATURE STEP                 #
+##################################################################
+#  alculate outages per temperature step
+step<-5
+tmp.step<-seq(0,35,by=step)
+temp.out.step.ls<-list()
+
+mon.stations.df<-group_by(stations.df, month=floor_date(date,"month"))
+agg.m<-colnames(mon.stations.df[,2:(dim(mon.stations.df)[2]-1)])
+# Compute monthly means:
+mon.stations.df<-aggregate(mon.stations.df[,agg.m], list(mon.stations.df$month), mean)
+colnames(mon.stations.df)<-c("date", agg.m)
+# Filter temperatures data for the period in outages set data:
+recent.tempr.df<-mon.stations.df %>% subset(date>=as.Date("2015-01-01"))
+# Find max (be careful - max of the means of all stations!) across all stations:
+recent.tempr.df$max<-recent.tempr.df[,-1] %>% apply(1, max, na.rm=TRUE)
+# Choose columns:
+filter.tempr.df<-dplyr::select(recent.tempr.df, c("date","max"))
 
 
+f_filter.outages.df01<-hourly.ts.out
+f_filter.outages.df01$key<-paste(f_filter.outages.df01$production_RegisteredResource.mRID, f_filter.outages.df01$st.datetime, f_filter.outages.df01$end.datetime)
+f_filter.outages.df01<-dplyr::select(dplyr::filter(f_filter.outages.df01, 
+                                                   fuel %in% c("nuc","coal","lignite","gas")),  
+                                     c("date.time","production_RegisteredResource.mRID","fuel","key"))
+# Calculate all outages in a month and fuel type:
+f_filter.outages.df<-plyr::ddply(f_filter.outages.df01, .(floor_date(f_filter.outages.df01$date.time, unit="month"), fuel), summarise, 
+                                  freq=length(unique(key)))
+colnames(f_filter.outages.df)<-c("date","fuel","freq")
+f_filter.outages.df$date<-as.Date(f_filter.outages.df$date)
+
+bar.data.4<-dplyr::left_join(filter.tempr.df, f_filter.outages.df, by=c("date"="date"))
+
+# Filter:
+filtered.bar.data.4<-subset(bar.data.4, floor_date(date, "year")>=as.Date("2018-01-01") & floor_date(date, "year")<=as.Date("2019-01-01"))
+
+# Aggregate by temperature step:
+for (i in 1:(length(tmp.step)-1)) {
+  temp.out.1<-dplyr::filter(filtered.bar.data.4, filtered.bar.data.4$max>=tmp.step[i] & filtered.bar.data.4$max<=tmp.step[i+1])
+  temp.out.1$step<-tmp.step[i]
+  temp.out.step.ls[[i]]<-plyr::ddply(temp.out.1, .(step, fuel), summarise, sum.freq=sum(freq, na.rm = T))
+}
+temp.out.step.df<- dplyr::bind_rows(temp.out.step.ls[1:length(temp.out.step.ls)])
+temp.out.step.df<-drop_na(temp.out.step.df)
+
+ggplot2::ggplot(temp.out.step.df) +
+  geom_bar(aes(x=as.factor(step), y=sum.freq, fill=as.factor(fuel)), stat="identity") + 
+  theme_classic() + 
+  scale_fill_brewer(palette="Set3", labels=c("Coal", "Gas", "Lignite", "Nuclear")) + 
+  labs(title="Frequency of outages per temperature range",
+       subtitle = "(number of occurences per fuel type and time moment: data for 2018)",
+       x= paste("Temperature (Germany mean daily air temperature in 2m high °C)", sep=""), 
+       y = "Frequency of outages",
+       fill="Fuel")
+#ggsave("./Rplots/barplott_out_tmpr.png", width = 150, height = 100, dpi = 300, units = "mm")

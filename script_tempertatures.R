@@ -203,8 +203,10 @@ ggdf.3 <- data.frame(date=seq(begin.1,end.1,by="hours"), tmp=as.matrix(DE.max.ts
 #########                   Plot SMA                   ###########
 ggplot()+
   #geom_line(data=ggdf.1,aes(x=date, y=tmp)) +
-  geom_line(data=ggdf.2,aes(x=date, y=tmp), col="wheat", size=1) +
-  geom_line(data=ggdf.3,aes(x=date, y=tmp), col="coral3", size=1) +
+  #geom_line(data=ggdf.2,aes(x=date, y=tmp), col="wheat", size=1) +
+  #geom_line(data=ggdf.3,aes(x=date, y=tmp), col="coral3", size=1) + brewer.pal(6, "Set3")[3]
+  geom_line(data=ggdf.2,aes(x=date, y=tmp), col=brewer.pal(4, "Set3")[4], size=1) +
+  geom_line(data=ggdf.3,aes(x=date, y=tmp), col=brewer.pal(4, "Set3")[3], size=1) + 
   labs(title = "Time seies: hourly temperatures [t°C]",
        subtitle = paste(n.years, "-years simple moving average for DE average (beige)","\n" ,
                         n.years, "-years simple moving average for DE maximum (red)","\n" ,
@@ -228,6 +230,6 @@ ggplot()+
         legend.key.size = unit(1,"line"),
         legend.title.align=0.5)
 #ggsave("./Rplots/temperatures.png", dpi = 600, width = 540, height = 310, units = "mm")
-ggsave("./Rplots/temperature_trends.png", dpi = 300, width = 200, height = 200, units = "mm")
+ggsave("./Rplots/temperature_trends.png", dpi = 300, width = 210, height = 210, units = "mm")
 ##################################################################
 # Files are saved in ./Rplot/temperatures.png and ./Rplot/temperatures_trends.png
