@@ -410,7 +410,8 @@ for (i in 1:length(radsmi.ls)) {
   temp.stat.df$region<-unique(radsmi.ls[[i]][,6])
   stat.ls[[i]]<-temp.stat.df
 }
-# DATAFRAME with statistics about smi valies at location of power plants with outages
+# Data frame with statistics about smi valies at location of power plants with outages
+# In this data frame eci defines the power plant for which the SMI value was found
 stat.all.df<- dplyr::bind_rows(stat.ls[1:length(stat.ls)])
 dim(stat.all.df) # check: 106
 #sapply(stat.ls[[1]], class)
@@ -422,11 +423,11 @@ dim(stat.all.df) # check: 106
 ##################################################################
 #########             joining databases I              ###########
 ##################################################################
-# Add years and months to smi time series additionally to just periods
+# Add years and months to smi time series additionally to just periods:
 dim(radsmi.all.df) # check: 86496
 smi.ts.df<-inner_join(timedate.df, radsmi.all.df, by=c("period"="period"))
-dim(smi.ts.df) # check:86496
-length(unique(smi.ts.df$plz)) #81
+dim(smi.ts.df) # check: 86496
+length(unique(smi.ts.df$plz)) # 81
 length(unique(smi.ts.df$eic))  # check: 106 unique eics
 # EICs give us an information and tell which power plant was chosen 
 # for the center of the radius SMI around.
@@ -450,10 +451,9 @@ bs$labels<-paste(bs$x1, bs$x2, sep="-")
 bs<-bs[1:(length(bs$x1)-1),]
 bs$'Before 2000'<-probs.1[,2]
 bs$'After 2000'<-probs.2[,2]
-
 colors<-c("Before 2000" = "red", "After 2000" = "green3", "Intercept" = "black")
 
-ggplot(smi.ts.df, aes(x=smi.radmeans, fill=marker, color=marker), aplha=0.3)+
+ggplot(smi.ts.df, aes(x=smi.radmeans, fill=marker), aplha=0.3)+
   geom_histogram(bins = 50, alpha=0.3,
                  position = "identity"
                  , aes(y = ..density..) )+
@@ -463,15 +463,17 @@ ggplot(smi.ts.df, aes(x=smi.radmeans, fill=marker, color=marker), aplha=0.3)+
   labs(x="SMI", fill="") +
   theme_minimal()+
   theme(legend.position = c(0.1, 0.95))
+#ggsave("./Rplots/probabil_dens_smi.png", dpi = 300, width = 100, height = 110, units = "mm")
 #################################################################
 
 
 ##################################################################
 #########             joining databases II             ###########
 ##################################################################
+
 dim(out.ts.loc.df) # check: 9636
 dim(smi.ts.df) # check: 86496
-
+# Take SMI values only for the time frame when data on outages is available.
 smi.ts.df.15<-subset(smi.ts.df, year>=2015)
 length(unique(out.ts.loc.df$production_RegisteredResource.mRID)) # 106
 
@@ -708,7 +710,6 @@ ggpubr::ggscatter(inspect.3.3, x = "mon", y = "sum.freq",
                   cor.coef = TRUE, cor.method = "pearson",
                   xlab = "Month", ylab = "Number of outages") 
 #png(paste("./plots/corr_out_smi_",test.plz,".png", sep=""))
-
 ##################################################################
 
 
@@ -783,7 +784,7 @@ dim(ps.unq) #9
 
 # create one for all
 
-# create dataframes for fuel types
+# create data frames for fuel types
 all.pp.df<-extract.pp.df[extract.pp.df$fuel==c("coal","lignite","gas","nuc","ps"),]
 dim(all.pp.df) # 402 16
 all.pp.df<-left_join(all.pp.df, eic.fuel.df[,c("peic","in_cap")], by=c("eic"="peic"))
@@ -815,6 +816,15 @@ FromYear<-2010
 ToYear<-2018
 Mon<-6
 ##################################################################
+# Open nc file with drought adta
+nc_ufz<-ncdf4::nc_open("./data_ufz/1951-2018.nc")
+# use nc_open to read the data into a data structure I called nc_data. 
+# Print the metadata about this file to a text file.
+{
+  sink("./data_ufz/1951-2013_metadata.txt")
+  print(nc_ufz)
+  sink()
+}
 # Reload the initial values to lon/lat
 lon<-ncdf4::ncvar_get(nc_ufz, "lon")
 lat<-ncdf4::ncvar_get(nc_ufz, "lat")
@@ -967,6 +977,5 @@ ggplot(r.df.r, aes(x=x, y=y)) +
         axis.text = element_blank(),
         axis.ticks = element_blank(),
         legend.position = "right")
-#file.name<-paste("./plots/", "data_tmp_smi_out" , FromYear, "-", ToYear, ".svg", sep="")
-#ggsave(file.name,  width = 500, height = 500)
+ggsave("./Rplots/data_tmp_smi_out.png",  width = 160, height = 150, units = "mm")
 ##################################################################
