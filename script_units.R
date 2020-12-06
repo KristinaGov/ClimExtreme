@@ -114,7 +114,8 @@ loc.stat.df$bubble<-1
 # Create a label name to show on the map:
 loc.stat.df$full_name<-paste(loc.stat.df$city, ", St. No: ", loc.stat.df$id, sep="")
 plz.df$plz<-as.numeric(plz.df$plz)
-# Add this data to the data frame sourced from shp@data:
+# Add this data to the data frame sourced from shp
+data:
 all.plz.stat.df<-left_join(plz.df, loc.stat.df[,c("plz","full_name","color", "bubble")], by=c("plz"="plz"))
 sum(!is.na(all.plz.stat.df$full_name)) # Check - have to be the same number as stations in the set 20
 

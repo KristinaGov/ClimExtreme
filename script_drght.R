@@ -311,9 +311,10 @@ aggregate.smi.range$regyear<-ifelse(aggregate.smi.range$year>=2006, "After 2006"
 aggregate.smi.range.long<-gather(aggregate.smi.range, mtype, mval, c("minsma","maxsma","meansma") )
 my.formula <- y ~ x
 
-ggplot(aggregate.smi.range.long, aes(x=date, y=mval, color=mtype, fill=regyear)) +
+ggplot(aggregate.smi.range.long, aes(x=date, y=mval, fill=regyear, linetype=mtype)) +
+#ggplot(aggregate.smi.range.long, aes(x=date, y=mval, fill=regyear, color=mtype)) +
   geom_linerange( aes(ymin = min, ymax = max), col = brewer.pal(6, "Set3")[3], alpha=0.1) +
-  geom_smooth(method="lm") +
+  geom_smooth(method="lm", color="black", size=0.6) +
   #stat_poly_eq(formula = my.formula, aes(label = paste(..rr.label..)),   parse = TRUE) + 
   #stat_cor() +
   geom_line() +
@@ -322,21 +323,24 @@ ggplot(aggregate.smi.range.long, aes(x=date, y=mval, color=mtype, fill=regyear))
   scale_y_continuous(expand = c(0,0), limits = c(0,1))+
   theme(axis.text.x = element_text(angle = 90, hjust = 1), 
         text = element_text(size=11),
-        #legend.position = "top",
-        #legend.box="vertical",
-        legend.position=c(0.15,0.75),
+        legend.position = "top",
+        legend.box="horizontal",
+        #legend.position=c(0.15,0.75),
         legend.background = element_rect(fill=ggplot2::alpha("white", 0.75), color="transparent"), 
         legend.title = element_text(size = 9),
         legend.text = element_text(size = 9),
         legend.key.size = unit(0.5,"line")) +
-  labs(y="SMI", x="", fill="Year:", color = "SMI Measurment:") +
-  scale_color_brewer(palette = "Set2", labels = c("min (SMA)", "max (SMA)", "mean (SMA)"),
-                     guide = guide_legend(override.aes = list(linetype = c(1, 1, 1),
-                                                              shape = c(16, 16, 16), fill=NA)) )+
+  labs(y="SMI", x="", fill="Year:", color = "SMI Measurment:", linetype = "SMI Measurment:") +
+  scale_linetype(labels = c("min (SMA)", "max (SMA)", "mean (SMA)"),
+                          guide = guide_legend(override.aes = list(linetype = c("twodash", "solid", "dotted"),
+                                                                   shape = c(NA, NA, NA), fill=NA)) )+
+  #scale_color_brewer(palette = "Set2", labels = c("min (SMA)", "max (SMA)", "mean (SMA)"),
+                     #guide = guide_legend(override.aes = list(linetype = c(1, 1, 1),
+                                                              #shape = c(16, 16, 16), fill=NA)) )+
   scale_fill_brewer(palette = "Set2", labels = c("1951-1977", "1997-2006", "2006-2018"),
                     guide = guide_legend(override.aes = list(linetype = c(0, 0, 0),
                                                              shape = c(NA, NA, NA))))
-#ggsave("./Rplots/SMI_timeseries.png", dpi = 300, width = 100, height = 100, units = "mm")
+#ggsave("./Rplots/SMI_timeseries.png", dpi = 300, width = 300, height = 100, units = "mm")
 
 # Look at june and december values.
 aggregate.smi.range.j$minsma<-SMA(aggregate.smi.range.j$min, n = sma_shift)

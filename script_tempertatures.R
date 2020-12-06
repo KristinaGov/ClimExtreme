@@ -203,34 +203,40 @@ ggdf.3 <- data.frame(date=seq(begin.1,end.1,by="hours"), tmp=as.matrix(DE.max.ts
 #########                   Plot SMA                   ###########
 ggplot()+
   #geom_line(data=ggdf.1,aes(x=date, y=tmp)) +
-  geom_line(data=ggdf.2,aes(x=date, y=tmp, col=brewer.pal(4, "Set3")[4]), size=1) +
-  geom_line(data=ggdf.3,aes(x=date, y=tmp, col=brewer.pal(4, "Set3")[1]), size=1) + 
+  #geom_line(data=ggdf.2,aes(x=date, y=tmp, col=brewer.pal(4, "Set3")[4]), size=1) +
+  #geom_line(data=ggdf.3,aes(x=date, y=tmp, col=brewer.pal(4, "Set3")[1]), size=1) + 
+  geom_line(data=ggdf.2,aes(x=date, y=tmp, linetype="solid"), size=0.3) +
+  geom_line(data=ggdf.3,aes(x=date, y=tmp, linetype="dotted"), size=0.3) + 
   labs( y="Temperature [C°]") +
   scale_x_datetime(name="", labels = date_format("%Y"), 
                    expand=c(0,0),date_breaks="10 years",
                    date_minor_breaks = "years",
                    limits = (c(begin.1,end.1))) +
   theme_minimal() +
-  scale_color_manual(values = c( brewer.pal(4, "Set3")[1],  brewer.pal(4, "Set3")[4]),
-                     labels = c(paste(n.years, "-years simple moving average for DE maximum", sep=""), 
+  #scale_color_manual(values = c( brewer.pal(4, "Set3")[1],  brewer.pal(4, "Set3")[4]),
+                     #labels = c(paste(n.years, "-years simple moving average for DE maximum", sep=""), 
+                                #paste(n.years, "-years simple moving average for DE average", sep="")),
+                     #name="")+
+  scale_linetype_manual(values = c("solid",  "dotted"),
+                        labels = c(paste(n.years, "-years simple moving average for DE maximum", sep=""), 
                                 paste(n.years, "-years simple moving average for DE average", sep="")),
                      name="")+
-  theme(axis.text.x = element_text(angle = 90, hjust = 1, size=19),
-        axis.text.y = element_text(angle = 90, hjust = 1, size=19),
-        plot.title = element_text(size = 18),
-        plot.subtitle = element_text(size = 18),
-        axis.title.x = element_text(size=24),
-        axis.title.y = element_text(size=24),
-        legend.title=element_text(size=18), 
-        legend.text=element_text(size=18),
-        legend.key.size = unit(1,"line"),
-        text = element_text(size=11),
-        legend.position = c(0, 1), 
-        legend.justification = c(0, 1),
-        legend.direction='vertical',
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, size=9),
+        axis.text.y = element_text(angle = 90, hjust = 1, size=9),
+        axis.title.x = element_text(size=9),
+        axis.title.y = element_text(size=9),
+        legend.title=element_text(size=9), 
+        legend.text=element_text(size=9),
+        legend.key.size = unit(0.5,"line"),
+        text = element_text(size=9),
+        #legend.position = c(0, 1), 
+        #legend.justification = c(0, 1),
+        legend.direction='horizontal',
+        legend.position = "top", 
         legend.background = element_rect(fill=ggplot2::alpha("white", 0.75), color="transparent"))
 
 #ggsave("./Rplots/temperatures.png", dpi = 600, width = 540, height = 310, units = "mm")
-ggsave("./Rplots/temperature_trends.png", dpi = 300, width = 210, height = 210, units = "mm")
+ggsave("./Rplots/temperature_trends.png", dpi = 300, width = 300, height = 100, units = "mm")
 ##################################################################
 # Files are saved in ./Rplot/temperatures.png and ./Rplot/temperatures_trends.png
+
