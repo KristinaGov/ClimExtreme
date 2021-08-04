@@ -15,7 +15,7 @@ In the folder *[./data_temp/stations_hr]* you can find time series of the temper
 Below you find the figure of temperatures time series since 1893 and smoothed time series showing the trend (using simple moving average).
  
 
-![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperatures.png?raw=true "Temperature trends (with SMA) [t°C]")           | ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperature_trends.png?raw=true "Temperature [t°C]")
+![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperatures.png?raw=true&s=50) "Temperature trends (with SMA) [t°C]")           | ![Alt text](https://github.com/KristinaGov/ClimExtreme/blob/master/Rplots/temperature_trends.png?raw=true "Temperature [t°C]")
 :-------------------------:|:-------------------------:
 (1)                        | (2)
 
